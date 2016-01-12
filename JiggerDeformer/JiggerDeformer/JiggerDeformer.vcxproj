@@ -133,9 +133,10 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="JiggleDeformer.cpp" />
+    <ClCompile Include="PluginMain.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="JiggelDeformer.h" />
+    <ClInclude Include="JiggleDeformer.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

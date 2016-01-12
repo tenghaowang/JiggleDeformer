@@ -18,9 +18,12 @@
     <ClCompile Include="JiggleDeformer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="PluginMain.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="JiggelDeformer.h">
+    <ClInclude Include="JiggleDeformer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
