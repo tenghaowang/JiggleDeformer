@@ -1,0 +1,14 @@
+﻿Build started 2016/1/11 22:36:56.
+     1>Project "C:\Users\Ryan\Desktop\JiggerDeformer\JiggerDeformer\JiggerDeformer.vcxproj" on node 2 (Build target(s)).
+     1>ClCompile:
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\x86_amd64\CL.exe /c /I"C:\Program Files\Autodesk\Maya2016\include" /Zi /nologo /W3 /WX- /sdl /Od /D WIN32 /D _WIN64 /D _WINDOWS /D _USRDLL /D NT_PLUGIN /D REQUIRE_IOSTREAM /D _WINDLL /D _MBCS /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /GR- /Fo"x64\Debug\\" /Fd"x64\Debug\vc120.pdb" /Gd /TP /errorReport:prompt ..\..\helloWorldCmd.cpp
+         helloWorldCmd.cpp
+       Link:
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\x86_amd64\link.exe /ERRORREPORT:PROMPT /OUT:"C:\Users\Ryan\Desktop\JiggerDeformer\x64\Debug\JiggerDeformer.mll" /INCREMENTAL /NOLOGO /LIBPATH:"C:\Program Files\Autodesk\Maya2016\lib" Foundation.lib OpenMaya.lib OpenMayaUI.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"C:\Users\Ryan\Desktop\JiggerDeformer\x64\Debug\JiggerDeformer.pdb" /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"C:\Users\Ryan\Desktop\JiggerDeformer\x64\Debug\JiggerDeformer.lib" /MACHINE:X64 /export:initializePlugin /export:uninitializePlugin /DLL x64\Debug\helloWorldCmd.obj
+            Creating library C:\Users\Ryan\Desktop\JiggerDeformer\x64\Debug\JiggerDeformer.lib and object C:\Users\Ryan\Desktop\JiggerDeformer\x64\Debug\JiggerDeformer.exp
+         JiggerDeformer.vcxproj -> C:\Users\Ryan\Desktop\JiggerDeformer\x64\Debug\JiggerDeformer.mll
+     1>Done Building Project "C:\Users\Ryan\Desktop\JiggerDeformer\JiggerDeformer\JiggerDeformer.vcxproj" (Build target(s)).
+
+Build succeeded.
+
+Time Elapsed 00:00:01.42
