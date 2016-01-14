@@ -5,7 +5,7 @@
 MStatus initializePlugin(MObject mobject){
 	MStatus status;
 	MFnPlugin mfnPlugin(mobject, "Ryan Wang", "1.0","Any");
-	status = mfnPlugin.registerNode("jiggelDeformer", jiggleDeformer::nodeID, jiggleDeformer::nodeCreator,
+	status = mfnPlugin.registerNode("jiggleDeformer", jiggleDeformer::nodeID, jiggleDeformer::nodeCreator,
 											jiggleDeformer::nodeInitialize,MPxNode::kDeformerNode);
 	CHECK_MSTATUS_AND_RETURN_IT(status);
 

@@ -10,11 +10,17 @@
 #include <maya/MFnData.h>
 #include <maya/MItGeometry.h>
 #include <maya/MTime.h>
-
+#include <maya/MFloatArray.h>
+#include <maya/MPoint.h>
+#include <maya/MPointArray.h>
 #include <maya/MMatrix.h>
 #include <maya/MGlobal.h>
 #include <maya/MTime.h>
 #include <map>
+#include <maya/MArrayDataBuilder.h>
+#include <maya/MArrayDataHandle.h>
+#include <maya/MDataHandle.h>
+#include <maya/MDataBlock.h>
 
 class jiggleDeformer : public MPxDeformerNode{
 	public :
@@ -27,7 +33,6 @@ class jiggleDeformer : public MPxDeformerNode{
 							   unsigned int geomIndex);
 		
 		
-
 		static void *nodeCreator();
 		static MStatus nodeInitialize();
 		static MTypeId nodeID;
@@ -37,15 +42,19 @@ class jiggleDeformer : public MPxDeformerNode{
 		static MObject mJiggleMap;
 		static MObject mDampingMap;
 		static MObject mStiffnessMap;
+		static MObject mPerGeometry;
+		static MObject mWorldMatrix;
 
 	private:
+
+		MStatus jumpToElement(MArrayDataHandle& dataArray, unsigned int index);
 		std::map<unsigned int, MFloatArray> _jiggleMap;
 		std::map<unsigned int, MFloatArray> _dampingMap;
-		std::map<unsigned int, MFloatArray> __stiffnessMap;
+		std::map<unsigned int, MFloatArray> _stiffnessMap;
 		std::map<unsigned int, MTime> _PreviousTime;
 		std::map<unsigned int, bool> _initialized;
-		std::map<unsigned int, MPointArray> _previousPosition;
-		std::map<unsigned int, MPointArray> _currentPosition;
+		std::map<unsigned int, MPointArray> _previousPointsPos;
+		std::map<unsigned int, MPointArray> _currentPointPos;
 		std::map<unsigned int, MFloatArray> _weights;
 		std::map<unsigned int, MIntArray> _membership;
 
