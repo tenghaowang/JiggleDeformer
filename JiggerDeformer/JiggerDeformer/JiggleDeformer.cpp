@@ -4,11 +4,13 @@ MTypeId jiggleDeformer::nodeID(0x00000721);
 MObject jiggleDeformer::mTime;
 MObject jiggleDeformer::mStiffness;
 MObject jiggleDeformer::mDamping;
+MObject jiggleDeformer::mMaxDisplacement;
 MObject jiggleDeformer::mJiggleMap;
 MObject jiggleDeformer::mStiffnessMap;
 MObject jiggleDeformer::mDampingMap;
 MObject jiggleDeformer::mPerGeometry;
 MObject jiggleDeformer::mWorldMatrix;
+
 
 //constructor
 jiggleDeformer::jiggleDeformer(){
@@ -36,6 +38,23 @@ MStatus jiggleDeformer::jumpToElement(MArrayDataHandle& dataArray, unsigned int 
 
 }
 
+MStatus jiggleDeformer::setDependentsDirty(const MPlug& plug, MPlugArray& plugArray){
+	MStatus status;
+	if (plug == mStiffnessMap || plug == mDampingMap || plug == mJiggleMap ||plug == weights){
+		unsigned int geomIndex = 0;
+		//if plug belongs to mStiffnessMap, mDampingMap, mJiggleMap
+		if (plug.isArray()){
+			//plug.parent() returns the parent compound plug
+			geomIndex = plug.parent().logicalIndex();
+		}
+		else{
+			geomIndex = plug.array().parent().logicalIndex();
+		}
+		_dirtyMap[geomIndex] = true;
+	}
+	return status;
+}
+
 MStatus jiggleDeformer::deform(MDataBlock& pDataBlock,MItGeometry& ItGeom,const MMatrix& localToWorldMatrix,unsigned int geomIndex){
 	MStatus status;
 	MPointArray points;
@@ -48,6 +67,14 @@ MStatus jiggleDeformer::deform(MDataBlock& pDataBlock,MItGeometry& ItGeom,const 
 
 	MDataHandle dampingHandle = pDataBlock.inputValue(mDamping);
 	float damping = dampingHandle.asFloat();
+
+	MDataHandle scaleHandle = pDataBlock.inputValue(mScale);
+	float scale = scaleHandle.asFloat();
+
+	MDataHandle maxdisplacementHandle = pDataBlock.inputValue(mMaxDisplacement);
+	float maxdiplacement = maxdisplacementHandle.asFloat()*scale;
+
+
 
 	//Algotithm
 	MPointArray& currentPointsPos = _currentPointPos[geomIndex];
@@ -85,40 +112,74 @@ MStatus jiggleDeformer::deform(MDataBlock& pDataBlock,MItGeometry& ItGeom,const 
 	MFloatArray& stiffnessMap = _stiffnessMap[geomIndex];
 	MFloatArray& dampingMap = _dampingMap[geomIndex];
 	MFloatArray& jiggleMap = _jiggleMap[geomIndex];
+	MIntArray& membershipMap = _membership[geomIndex];
 
-	MArrayDataHandle mJiggleMapHandle = mPerGeometryHandle.child(mJiggleMap);
-	MArrayDataHandle mDampingMapHandle = mPerGeometryHandle.child(mDampingMap);
-	MArrayDataHandle mStiffnessMapHandle = mPerGeometryHandle.child(mStiffnessMap);
-	int ii = 0;
-	while (!ItGeom.isDone()){
-		//jiggleMap
-		status = jumpToElement(mJiggleMapHandle, ItGeom.index());
-		CHECK_MSTATUS_AND_RETURN_IT(status);
-		jiggleMap[ii] = mJiggleMapHandle.inputValue().asFloat();
+	if (_dirtyMap[geomIndex] || ItGeom.count() != membershipMap.length())
+	{
+		MArrayDataHandle mJiggleMapHandle = mPerGeometryHandle.child(mJiggleMap);
+		MArrayDataHandle mDampingMapHandle = mPerGeometryHandle.child(mDampingMap);
+		MArrayDataHandle mStiffnessMapHandle = mPerGeometryHandle.child(mStiffnessMap);
+		//read the paintmaps
+		jiggleMap.setLength(ItGeom.count());
+		dampingMap.setLength(ItGeom.count());
+		stiffnessMap.setLength(ItGeom.count());
+		weights.setLength(ItGeom.count());
 
-		//dampingMap
-		status = jumpToElement(mDampingMapHandle, ItGeom.index());
-		CHECK_MSTATUS_AND_RETURN_IT(status);
-		dampingMap[ii] = mDampingMapHandle.inputValue().asFloat();
+		int ii = 0;
+		while (!ItGeom.isDone()){
+			//jiggleMap
+			status = jumpToElement(mJiggleMapHandle, ItGeom.index());
+			CHECK_MSTATUS_AND_RETURN_IT(status);
+			jiggleMap[ii] = mJiggleMapHandle.inputValue().asFloat();
 
-		//stiffnessMap
-		status = jumpToElement(mStiffnessMapHandle, ItGeom.index());
-		CHECK_MSTATUS_AND_RETURN_IT(status);
-		stiffnessMap[ii] = mStiffnessMapHandle.inputValue().asFloat();
+			//dampingMap
+			status = jumpToElement(mDampingMapHandle, ItGeom.index());
+			CHECK_MSTATUS_AND_RETURN_IT(status);
+			dampingMap[ii] = mDampingMapHandle.inputValue().asFloat();
 
-		//weightMap
-		weights[ii] = weightValue(pDataBlock, geomIndex, ItGeom.index);
+			//stiffnessMap
+			status = jumpToElement(mStiffnessMapHandle, ItGeom.index());
+			CHECK_MSTATUS_AND_RETURN_IT(status);
+			stiffnessMap[ii] = mStiffnessMapHandle.inputValue().asFloat();
 
-		//membership
+			//weightMap
+			weights[ii] = weightValue(pDataBlock, geomIndex, ItGeom.index());
 
+			//membership
+			membershipMap[ii] = ItGeom.index();
+			ii++;
+			ItGeom.next();
+		}
+		_dirtyMap[geomIndex] = false;
 	}
 
-	//read the paintmaps
-	jiggleMap.setLength(ItGeom.count());
-	dampingMap.setLength(ItGeom.count());
-	stiffnessMap.setLength(ItGeom.count());
-	weights.setLength(ItGeom.count());
+	MPoint goalPoint, newPoint;
+	MVector velocity, goalForce, displacement;
+	float dampingMagnitude, stiffnessMagnitude;
+	//on the calculations are under worldMatrix
+	for (int i = 0; i < points.length(); i++){
+		//calculate goal position
+		goalPoint = points[i] * localToWorldMatrix;
 
+		//calculate dampingValue
+		dampingMagnitude = damping * dampingMap[i];
+		//calculate stiffnessValue
+		stiffnessMagnitude = stiffness * stiffnessMap[i];
+		//velocity
+		velocity = (currentPointsPos[i] - previousPointsPos[i])*(1 - dampingMagnitude);
+		newPoint = currentPointsPos[i] + velocity;
+		goalForce = (goalPoint - newPoint) *stiffnessMagnitude;
+		newPoint += goalForce;
+
+		displacement = newPoint - goalPoint;
+		if (displacement.length() > maxdiplacement){
+			displacement = displacement.normal() * maxdiplacement;
+			newPoint = goalPoint + displacement;
+		
+		}
+		
+		//newPoint = goalPoint + (newPoint - goalPoint) * jiggleMap[i];
+	}
 
 	return status;
 }
@@ -154,6 +215,18 @@ MStatus jiggleDeformer::nodeInitialize(){
 	addAttribute(mDamping);
 	attributeAffects(mDamping, outputGeom);
 	
+	mMaxDisplacement = nAttr.create("maxDispacement", "maxDisplacement", MFnNumericData::kFloat, 1.0, &status);
+	nAttr.setMin(0.0);
+	nAttr.setKeyable(true);
+	addAttribute(mMaxDisplacement);
+	attributeAffects(mMaxDisplacement,outputGeom);
+
+	mScale = nAttr.create("scale", "scale", MFnNumericData::kFloat, 1.0, &status);
+	nAttr.setMin(0.0);
+	nAttr.setKeyable(true);
+	addAttribute(mScale);
+	attributeAffects(mScale, outputGeom);
+
 	//compoundAttribute
 	mWorldMatrix = mAttr.create("worldMatrix","worldMatrix");
 	//jiggleMap

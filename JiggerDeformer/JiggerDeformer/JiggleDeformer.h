@@ -22,6 +22,8 @@
 #include <maya/MDataHandle.h>
 #include <maya/MDataBlock.h>
 
+
+
 class jiggleDeformer : public MPxDeformerNode{
 	public :
 		jiggleDeformer();
@@ -32,6 +34,7 @@ class jiggleDeformer : public MPxDeformerNode{
 							   const MMatrix& localToWorldMatrix,
 							   unsigned int geomIndex);
 		
+		virtual MStatus setDependentsDirty(const MPlug& plug, MPlugArray& plugArray);
 		
 		static void *nodeCreator();
 		static MStatus nodeInitialize();
@@ -39,6 +42,8 @@ class jiggleDeformer : public MPxDeformerNode{
 		static MObject mTime;
 		static MObject mDamping;
 		static MObject mStiffness;
+		static MObject mMaxDisplacement;
+		static MObject mScale;
 		static MObject mJiggleMap;
 		static MObject mDampingMap;
 		static MObject mStiffnessMap;
@@ -57,6 +62,7 @@ class jiggleDeformer : public MPxDeformerNode{
 		std::map<unsigned int, MPointArray> _currentPointPos;
 		std::map<unsigned int, MFloatArray> _weights;
 		std::map<unsigned int, MIntArray> _membership;
+		std::map<unsigned int, bool>_dirtyMap;
 
 
 
