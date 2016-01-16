@@ -21,7 +21,7 @@
 #include <maya/MArrayDataHandle.h>
 #include <maya/MDataHandle.h>
 #include <maya/MDataBlock.h>
-
+#include <maya/MFloatVectorArray.h>
 
 
 class jiggleDeformer : public MPxDeformerNode{
@@ -46,12 +46,14 @@ class jiggleDeformer : public MPxDeformerNode{
 		static MObject mScale;
 		static MObject mJiggleMap;
 		static MObject mDampingMap;
+		//this attributes used to lock jiggling directions
+		static MObject mBiasDirection;
 		static MObject mStiffnessMap;
 		static MObject mPerGeometry;
 		static MObject mWorldMatrix;
 
 	private:
-
+		MStatus getInputMesh(MDataBlock pDataBlock, unsigned int geomIndex, MObject* mInputMesh);
 		MStatus jumpToElement(MArrayDataHandle& dataArray, unsigned int index);
 		std::map<unsigned int, MFloatArray> _jiggleMap;
 		std::map<unsigned int, MFloatArray> _dampingMap;

@@ -18,6 +18,13 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="JiggleDeformer.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="JiggleDeformer.cpp" />
+    <ClCompile Include="PluginMain.cpp" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{A00A9A01-46B6-4F90-B8A3-FC97DD2B9CF3}</ProjectGuid>
     <RootNamespace>JiggerDeformer</RootNamespace>
@@ -131,13 +138,6 @@
       <AdditionalOptions>/export:initializePlugin /export:uninitializePlugin %(AdditionalOptions)</AdditionalOptions>
     </Link>
   </ItemDefinitionGroup>
-  <ItemGroup>
-    <ClCompile Include="JiggleDeformer.cpp" />
-    <ClCompile Include="PluginMain.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="JiggleDeformer.h" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

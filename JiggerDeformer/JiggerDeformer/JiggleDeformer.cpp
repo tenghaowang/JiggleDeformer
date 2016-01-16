@@ -4,7 +4,9 @@ MTypeId jiggleDeformer::nodeID(0x00000721);
 MObject jiggleDeformer::mTime;
 MObject jiggleDeformer::mStiffness;
 MObject jiggleDeformer::mDamping;
+MObject jiggleDeformer::mScale;
 MObject jiggleDeformer::mMaxDisplacement;
+MObject jiggleDeformer::mBiasDirection;
 MObject jiggleDeformer::mJiggleMap;
 MObject jiggleDeformer::mStiffnessMap;
 MObject jiggleDeformer::mDampingMap;
@@ -35,8 +37,18 @@ MStatus jiggleDeformer::jumpToElement(MArrayDataHandle& dataArray, unsigned int 
 		CHECK_MSTATUS_AND_RETURN_IT(status);
 	}
 	return status;
-
 }
+
+MStatus jiggleDeformer::getInputMesh(MDataBlock pDataBlock, unsigned int geomIndex, MObject* inputMesh){
+	MStatus status;
+	MArrayDataHandle inputArrayHandle = pDataBlock.outputArrayValue(input, &status);
+	status = jumpToElement(inputArrayHandle, geomIndex);
+	CHECK_MSTATUS_AND_RETURN_IT(status);
+	MDataHandle inputGeomHandle = inputArrayHandle.inputValue();
+	*inputMesh = inputGeomHandle.asMesh();
+	return status;
+}
+
 
 MStatus jiggleDeformer::setDependentsDirty(const MPlug& plug, MPlugArray& plugArray){
 	MStatus status;
@@ -61,6 +73,8 @@ MStatus jiggleDeformer::deform(MDataBlock& pDataBlock,MItGeometry& ItGeom,const 
 	ItGeom.allPositions(points);
 	MDataHandle timeHandle = pDataBlock.inputValue(mTime);
 	MTime currentTime = timeHandle.asTime();
+	MDataHandle envHandle = pDataBlock.inputValue(envelope);
+	float env = envHandle.asFloat();
 
 	MDataHandle stiffnessHandle = pDataBlock.inputValue(mStiffness);
 	float stiffness = stiffnessHandle.asFloat();
@@ -73,6 +87,21 @@ MStatus jiggleDeformer::deform(MDataBlock& pDataBlock,MItGeometry& ItGeom,const 
 
 	MDataHandle maxdisplacementHandle = pDataBlock.inputValue(mMaxDisplacement);
 	float maxdiplacement = maxdisplacementHandle.asFloat()*scale;
+
+	MDataHandle biasdirectionHandle = pDataBlock.inputValue(mBiasDirection);
+	float biasdirection = biasdirectionHandle.asFloat();
+	
+	MMatrix worldtoLocalMatrix = localToWorldMatrix.inverse();
+	MFloatVectorArray normals;
+	if (!biasdirection == 0.0f){
+		MObject inputMesh;
+		status = getInputMesh(pDataBlock, geomIndex, &inputMesh);
+		CHECK_MSTATUS_AND_RETURN_IT(status);
+		MFnMesh mfnMesh(inputMesh, &status);
+		CHECK_MSTATUS_AND_RETURN_IT(status);
+		status = mfnMesh.getVertexNormals(false, normals, MSpace::kObject);
+		CHECK_MSTATUS_AND_RETURN_IT(status);
+	}
 
 
 
@@ -101,6 +130,7 @@ MStatus jiggleDeformer::deform(MDataBlock& pDataBlock,MItGeometry& ItGeom,const 
 		previousTime = currentTime;
 		return MStatus::kSuccess;
 	}
+
 	MArrayDataHandle mGeometryHandle = pDataBlock.inputArrayValue(mPerGeometry);
 	jumpToElement(mGeometryHandle,geomIndex);
 	CHECK_MSTATUS_AND_RETURN_IT(status);
@@ -157,7 +187,7 @@ MStatus jiggleDeformer::deform(MDataBlock& pDataBlock,MItGeometry& ItGeom,const 
 	MVector velocity, goalForce, displacement;
 	float dampingMagnitude, stiffnessMagnitude;
 	//on the calculations are under worldMatrix
-	for (int i = 0; i < points.length(); i++){
+	for (int i = 0; i < (int)points.length(); i++){
 		//calculate goal position
 		goalPoint = points[i] * localToWorldMatrix;
 
@@ -171,16 +201,37 @@ MStatus jiggleDeformer::deform(MDataBlock& pDataBlock,MItGeometry& ItGeom,const 
 		goalForce = (goalPoint - newPoint) *stiffnessMagnitude;
 		newPoint += goalForce;
 
+		//setup maximum displacement
 		displacement = newPoint - goalPoint;
 		if (displacement.length() > maxdiplacement){
 			displacement = displacement.normal() * maxdiplacement;
 			newPoint = goalPoint + displacement;
-		
 		}
 		
-		//newPoint = goalPoint + (newPoint - goalPoint) * jiggleMap[i];
+		//setup jigglepoint direction
+		/*if biasdirection is larger than zero, jiggle points could not enter inside the goal point
+		else jiggling point could not leave outside the goal point
+		*/
+		if (biasdirection > 0.0){
+			//jiggling points is inside the goal point
+			if (displacement * normals[membershipMap[i]] < 0.0f){
+				newPoint += normals[membershipMap[i]] * (displacement * normals[membershipMap[i]]) * biasdirection;
+			}
+		}
+		else if (biasdirection < 0.0) {
+			if (displacement * normals[membershipMap[i]] > 0.0f){
+				newPoint += normals[membershipMap[i]] * (displacement * normals[membershipMap[i]]) * biasdirection;
+			}
+		}
+
+		previousPointsPos[i] = currentPointsPos[i];
+		currentPointsPos[i] = newPoint;
+
+		points[i] += (newPoint * worldtoLocalMatrix - points[i]) * jiggleMap[i] * weights[i] * env;
 	}
 
+	ItGeom.setAllPositions(points);
+	previousTime = currentTime;
 	return status;
 }
 
@@ -227,10 +278,17 @@ MStatus jiggleDeformer::nodeInitialize(){
 	addAttribute(mScale);
 	attributeAffects(mScale, outputGeom);
 
+	mBiasDirection = nAttr.create("biasDirection", "biasDirection", MFnNumericData::kFloat, 0.0, &status);
+	nAttr.setMin(0.0);
+	nAttr.setMax(1.0);
+	addAttribute(mBiasDirection);
+	attributeAffects(mBiasDirection, outputGeom);
+
 	//compoundAttribute
 	mWorldMatrix = mAttr.create("worldMatrix","worldMatrix");
+
 	//jiggleMap
-	mJiggleMap = nAttr.create("jiggleMap", "jiggleMap", MFnNumericData::kFloat, 0.0, &status);
+	mJiggleMap = nAttr.create("jiggleMap", "jiggleMap", MFnNumericData::kFloat, 1.0, &status);
 	nAttr.setMin(0.0);
 	nAttr.setMax(1.0);
 	//Sets this attibute should have an array of data.
@@ -258,8 +316,13 @@ MStatus jiggleDeformer::nodeInitialize(){
 	cAttr.addChild(mDampingMap);
 	cAttr.addChild(mStiffnessMap);
 	cAttr.addChild(mWorldMatrix);
+	cAttr.setUsesArrayDataBuilder(true);
 	addAttribute(mPerGeometry);
-	attributeAffects(mJiggleMap,mPerGeometry);
+
+	attributeAffects(mJiggleMap,outputGeom);
+	attributeAffects(mStiffnessMap, outputGeom);
+	attributeAffects(mDampingMap, outputGeom);
+	attributeAffects(mWorldMatrix, outputGeom);
 
 	//make these attributes paintable
 	MGlobal::executeCommand("makePaintable -attrType multiFloat -sm deformer jiggleDeformer weights");
