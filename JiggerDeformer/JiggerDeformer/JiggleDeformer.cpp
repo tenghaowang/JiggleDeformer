@@ -1,6 +1,6 @@
 #include  "JiggleDeformer.h"
 
-MTypeId jiggleDeformer::nodeID(0x00000721);
+MTypeId jiggleDeformer::nodeID(0x0011580A);
 MObject jiggleDeformer::mTime;
 MObject jiggleDeformer::mStiffness;
 MObject jiggleDeformer::mDamping;
@@ -103,8 +103,6 @@ MStatus jiggleDeformer::deform(MDataBlock& pDataBlock,MItGeometry& ItGeom,const 
 		CHECK_MSTATUS_AND_RETURN_IT(status);
 	}
 
-
-
 	//Algotithm
 	MPointArray& currentPointsPos = _currentPointPos[geomIndex];
 	MPointArray& previousPointsPos = _previousPointsPos[geomIndex];
@@ -137,7 +135,6 @@ MStatus jiggleDeformer::deform(MDataBlock& pDataBlock,MItGeometry& ItGeom,const 
 	MDataHandle mPerGeometryHandle = mGeometryHandle.inputValue();
 	MDataHandle mWorldMatrixHandle = mPerGeometryHandle.child(mWorldMatrix);
 	MMatrix WorldMatrix = mWorldMatrixHandle.asMatrix();
-
 	MFloatArray& weights = _weights[geomIndex];
 	MFloatArray& stiffnessMap = _stiffnessMap[geomIndex];
 	MFloatArray& dampingMap = _dampingMap[geomIndex];
@@ -154,6 +151,7 @@ MStatus jiggleDeformer::deform(MDataBlock& pDataBlock,MItGeometry& ItGeom,const 
 		dampingMap.setLength(ItGeom.count());
 		stiffnessMap.setLength(ItGeom.count());
 		weights.setLength(ItGeom.count());
+		membershipMap.setLength(ItGeom.count());
 
 		int ii = 0;
 		while (!ItGeom.isDone()){
@@ -209,18 +207,18 @@ MStatus jiggleDeformer::deform(MDataBlock& pDataBlock,MItGeometry& ItGeom,const 
 		}
 		
 		//setup jigglepoint direction
-		/*if biasdirection is larger than zero, jiggle points could not enter inside the goal point
-		else jiggling point could not leave outside the goal point
-		*/
+		//if biasdirection is larger than zero, jiggle points could not enter inside the goal point
+		//else jiggling point could not leave outside the goal point
+		
 		if (biasdirection > 0.0){
 			//jiggling points is inside the goal point
 			if (displacement * normals[membershipMap[i]] < 0.0f){
-				newPoint += normals[membershipMap[i]] * (displacement * normals[membershipMap[i]]) * biasdirection;
+				newPoint += displacement.normal() * (displacement * normals[membershipMap[i]]) * biasdirection;
 			}
 		}
 		else if (biasdirection < 0.0) {
 			if (displacement * normals[membershipMap[i]] > 0.0f){
-				newPoint += normals[membershipMap[i]] * (displacement * normals[membershipMap[i]]) * biasdirection;
+				newPoint += displacement.normal() * (displacement * normals[membershipMap[i]]) * biasdirection;
 			}
 		}
 
@@ -232,6 +230,7 @@ MStatus jiggleDeformer::deform(MDataBlock& pDataBlock,MItGeometry& ItGeom,const 
 
 	ItGeom.setAllPositions(points);
 	previousTime = currentTime;
+
 	return status;
 }
 
@@ -241,6 +240,7 @@ void* jiggleDeformer::nodeCreator(){
 }
 
 MStatus jiggleDeformer::nodeInitialize(){
+	MGlobal::displayInfo("Node Initiaze...");
 	MFnMatrixAttribute mAttr;
 	MFnNumericAttribute nAttr;
 	MFnUnitAttribute uAttr;
@@ -279,8 +279,9 @@ MStatus jiggleDeformer::nodeInitialize(){
 	attributeAffects(mScale, outputGeom);
 
 	mBiasDirection = nAttr.create("biasDirection", "biasDirection", MFnNumericData::kFloat, 0.0, &status);
-	nAttr.setMin(0.0);
+	nAttr.setMin(-1.0);
 	nAttr.setMax(1.0);
+	nAttr.setKeyable(true);
 	addAttribute(mBiasDirection);
 	attributeAffects(mBiasDirection, outputGeom);
 
