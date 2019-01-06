@@ -19,11 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\src\JiggleDeformer.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="..\src\JiggleDeformer.cpp" />
-    <ClCompile Include="..\src\PluginMain.cpp" />
+    <ClCompile Include="..\..\..\..\..\Desktop\ryan_working\scripts\TecentTest\clampInfluenceCountCmd\clampInfluenceCountCmd\clampInfluenceCountCmd\helloWorldCmd.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{7B12EC77-584E-4712-9BBD-08C7AAEC2BEC}</ProjectGuid>

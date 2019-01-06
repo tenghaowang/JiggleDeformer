@@ -15,15 +15,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\src\JiggleDeformer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="..\src\PluginMain.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\JiggleDeformer.cpp">
+    <ClCompile Include="..\..\..\..\..\Desktop\ryan_working\scripts\TecentTest\clampInfluenceCountCmd\clampInfluenceCountCmd\clampInfluenceCountCmd\helloWorldCmd.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

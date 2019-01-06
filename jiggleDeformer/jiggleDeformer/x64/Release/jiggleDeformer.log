@@ -1,7 +1,8 @@
-﻿  JiggleDeformer.cpp
-  PluginMain.cpp
+﻿  helloWorldCmd.cpp
      Creating library C:\Users\Ryan\Documents\GitHub\JiggleDeformer\jiggleDeformer\x64\Release\jiggleDeformer.lib and object C:\Users\Ryan\Documents\GitHub\JiggleDeformer\jiggleDeformer\x64\Release\jiggleDeformer.exp
   Generating code
-  All 596 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
+  17 of 18 functions (94.4%) were compiled, the rest were copied from previous compilation.
+    5 functions were new in current compilation
+    0 functions had inline decision re-evaluated but remain unchanged
   Finished generating code
   jiggleDeformer.vcxproj -> C:\Users\Ryan\Documents\GitHub\JiggleDeformer\jiggleDeformer\x64\Release\jiggleDeformer.mll

@@ -91,7 +91,7 @@ def nodeInitializer():
     mfnUnitAttr = OpenMaya.MFnUnitAttribute()
     mfnMatrixAttr = OpenMaya.MFnMatrixAttribute()
     #define input
-    jiggleNode.mGoal = mfnNumericAttr.createPoint('goal' , 'goal')
+    jiggleNode.mGoal = mfnNumericAttr.createPoint('goal', 'goal')
     jiggleNode.addAttribute(jiggleNode.mGoal)
 
     jiggleNode.mDamping = mfnNumericAttr.create('damping', 'damping', OpenMaya.MFnNumericData.kFloat,1.0)
@@ -117,21 +117,20 @@ def nodeInitializer():
 
     jiggleNode.parentInverse = mfnMatrixAttr.create('parentInverse', 'parentInverse')
     jiggleNode.addAttribute(jiggleNode.parentInverse)
-    #define output
+    # define output
     jiggleNode.mOutput = mfnNumericAttr.createPoint('output','output')
     mfnNumericAttr.setWritable(False)
     mfnNumericAttr.setStorable(False)
     jiggleNode.addAttribute(jiggleNode.mOutput)
 
-
-    #set dirty
+    # set dirty
     jiggleNode.attributeAffects(jiggleNode.mGoal, jiggleNode.mOutput)
     jiggleNode.attributeAffects(jiggleNode.mStiffness, jiggleNode.mOutput)
     jiggleNode.attributeAffects(jiggleNode.mDamping,jiggleNode.mOutput)
     jiggleNode.attributeAffects(jiggleNode.mJiggleAmount, jiggleNode.mOutput)
     jiggleNode.attributeAffects(jiggleNode.mTime,jiggleNode.mOutput)
 
-#register plugin
+# register plugin
 def initializePlugin(mobject):
     fnPlugin = OpenMayaMPx.MFnPlugin(mobject, 'Ryan Wang', '1,0', 'Any')
     try:
@@ -140,7 +139,7 @@ def initializePlugin(mobject):
         sys.stderr.write('Failed to register node:' + nodeName)
         raise
 
-#deregister plugin
+# deregister plugin
 def uninitializePlugin(mobject):
     fnPlugin = OpenMayaMPx.MFnPlugin(mobject)
     try:
